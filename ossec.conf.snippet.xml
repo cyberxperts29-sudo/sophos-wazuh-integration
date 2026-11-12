@@ -1,0 +1,23 @@
+<!-- Add inside <ossec_config> in /var/ossec/etc/ossec.conf on the Wazuh manager -->
+
+<!-- 1. Receive Sophos syslog (allow only the firewall's IP) -->
+<remote>
+  <connection>syslog</connection>
+  <port>514</port>
+  <protocol>udp</protocol>
+  <allowed-ips>SOPHOS_IP/32</allowed-ips>
+</remote>
+
+<!-- 2. Register the Active Response script -->
+<command>
+  <name>sophos-block</name>
+  <executable>sophos-block.py</executable>
+  <timeout_allowed>no</timeout_allowed>
+</command>
+
+<!-- 3. Run it on brute force (110014) and port scan (110022) -->
+<active-response>
+  <command>sophos-block</command>
+  <location>server</location>
+  <rules_id>110014,110022</rules_id>
+</active-response>

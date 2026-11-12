@@ -1,0 +1,16 @@
+# Copy to /var/ossec/etc/sophos_api.conf
+#   sudo chown root:wazuh /var/ossec/etc/sophos_api.conf
+#   sudo chmod 640 /var/ossec/etc/sophos_api.conf
+# Never commit the real file.
+
+host=SOPHOS_IP_OR_HOSTNAME
+port=4444
+username=API_USER
+password=API_PASSWORD
+group=Wazuh-Blocked-IPs
+
+# Comma-separated IPs that must never be blocked (Wazuh manager, admin IPs)
+whitelist=WAZUH_IP,ADMIN_IP
+
+# yes = verify the Sophos TLS certificate (recommended in production)
+verify_tls=no

@@ -1,0 +1,133 @@
+<!--
+  Sophos Firewall - Standard syslog protocol rules
+  Requires: decoders/sophos_standard_syslog_decoders.xml
+  Rule ID range: 110000 - 110099 (inside Wazuh's custom range)
+
+  Author: Muhammad Ahmad Abid
+  Tested on: Wazuh 4.14.x, SFOS v22
+-->
+<group name="sophos,firewall,">
+
+  <!-- Base rule: every Sophos standard-syslog log -->
+  <rule id="110000" level="0">
+    <decoded_as>sophos-std</decoded_as>
+    <description>Sophos Firewall: event</description>
+  </rule>
+
+  <!-- Silence noisy System Health logs (CPU, memory, interface) -->
+  <rule id="110001" level="0">
+    <if_sid>110000</if_sid>
+    <field name="sophos.log_type">^System Health$</field>
+    <description>Sophos Firewall: system health metric</description>
+  </rule>
+
+  <!-- ===== Admin console events ===== -->
+  <rule id="110010" level="3">
+    <if_sid>110000</if_sid>
+    <field name="sophos.log_type">^Event$</field>
+    <field name="sophos.log_subtype">^Admin$</field>
+    <description>Sophos Firewall: admin event - $(sophos.message)</description>
+  </rule>
+
+  <rule id="110011" level="3">
+    <if_sid>110010</if_sid>
+    <status>^Successful$</status>
+    <field name="sophos.message">logged in successfully</field>
+    <description>Sophos Firewall: admin '$(srcuser)' logged in from $(srcip)</description>
+    <mitre><id>T1078</id></mitre>
+    <group>authentication_success,</group>
+  </rule>
+
+  <rule id="110012" level="2">
+    <if_sid>110010</if_sid>
+    <field name="sophos.message">logged out</field>
+    <description>Sophos Firewall: admin '$(srcuser)' logged out</description>
+  </rule>
+
+  <rule id="110013" level="5">
+    <if_sid>110010</if_sid>
+    <status>^Failed$</status>
+    <description>Sophos Firewall: failed admin login for '$(srcuser)' from $(srcip)</description>
+    <mitre><id>T1110</id></mitre>
+    <group>authentication_failed,</group>
+  </rule>
+
+  <!-- Brute force: 5 failed logins from the same IP in 2 minutes -->
+  <rule id="110014" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>110013</if_matched_sid>
+    <same_srcip />
+    <description>Sophos Firewall: possible brute force on admin console from $(srcip)</description>
+    <mitre><id>T1110.001</id></mitre>
+    <group>authentication_failures,attack,</group>
+  </rule>
+
+  <!-- ===== Configuration changes ===== -->
+  <rule id="110015" level="5">
+    <if_sid>110010</if_sid>
+    <status>^Successful$</status>
+    <field name="sophos.message">added by|changed by|deleted by|updated by|modified by</field>
+    <description>Sophos Firewall: configuration change by '$(srcuser)' - $(sophos.message)</description>
+    <mitre><id>T1562.004</id></mitre>
+    <group>config_changed,</group>
+  </rule>
+
+  <!-- Log forwarding settings modified -->
+  <rule id="110016" level="8">
+    <if_sid>110015</if_sid>
+    <field name="sophos.message">Log Settings</field>
+    <description>Sophos Firewall: log settings modified by '$(srcuser)' from $(srcip)</description>
+    <mitre><id>T1562.006</id></mitre>
+    <group>config_changed,</group>
+  </rule>
+
+  <!-- Syslog server deleted = the SIEM is being blinded -->
+  <rule id="110017" level="12">
+    <if_sid>110015</if_sid>
+    <field name="sophos.message">SysLog Server\.+deleted</field>
+    <description>Sophos Firewall: syslog server deleted by '$(srcuser)' - possible log tampering</description>
+    <mitre><id>T1562.006</id></mitre>
+    <group>config_changed,attack,</group>
+  </rule>
+
+  <!-- ===== Firewall traffic ===== -->
+  <rule id="110020" level="3">
+    <if_sid>110000</if_sid>
+    <field name="sophos.log_type">^Firewall$</field>
+    <field name="sophos.log_subtype">^Denied$</field>
+    <description>Sophos Firewall: traffic denied from $(srcip) ($(sophos.src_country)) to port $(dstport)</description>
+    <group>firewall_drop,</group>
+  </rule>
+
+  <!-- Probes on commonly exploited services -->
+  <rule id="110021" level="5">
+    <if_sid>110020</if_sid>
+    <dstport>^23$|^139$|^445$|^3389$|^5900$|^1433$|^3306$</dstport>
+    <description>Sophos Firewall: probe on sensitive service port $(dstport) from $(srcip) ($(sophos.src_country))</description>
+    <mitre><id>T1046</id></mitre>
+    <group>firewall_drop,recon,</group>
+  </rule>
+
+  <!-- Port scan: 15 denied connections to different ports in 60 s from the same IP -->
+  <rule id="110022" level="10" frequency="15" timeframe="60">
+    <if_matched_sid>110020</if_matched_sid>
+    <same_srcip />
+    <different_dstport />
+    <description>Sophos Firewall: port scan detected from $(srcip) ($(sophos.src_country))</description>
+    <mitre><id>T1046</id></mitre>
+    <group>recon,attack,</group>
+  </rule>
+
+  <!-- ===== Automated response (matches active-responses.log) ===== -->
+  <rule id="110030" level="10">
+    <match>sophos-block: BLOCKED</match>
+    <description>Sophos auto-response: attacker IP blocked on firewall</description>
+    <group>active_response,</group>
+  </rule>
+
+  <rule id="110031" level="7">
+    <match>sophos-block: API error|sophos-block: Sophos did not confirm</match>
+    <description>Sophos auto-response: block attempt failed</description>
+    <group>active_response,</group>
+  </rule>
+
+</group>

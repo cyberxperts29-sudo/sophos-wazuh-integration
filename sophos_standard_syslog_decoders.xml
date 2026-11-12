@@ -1,0 +1,142 @@
+<!--
+  Sophos Firewall (SFOS v21/v22) - Standard syslog protocol
+  (formerly "Central Reporting Format")
+
+  Wazuh's built-in sophos-fw decoder only matches the legacy
+  "Device standard format" (lines starting with device="...").
+  These decoders handle the current format, whose lines start with
+  device_name="..." timestamp="...".
+
+  Pattern: one parent decoder + sibling child decoders that share a name.
+  Each sibling extracts one field; a field missing from a log is skipped,
+  so the same set works for Firewall, Event (Admin/Auth), IPS, Web, etc.
+
+  Author: Muhammad Ahmad Abid
+  Tested on: Wazuh 4.14.x, SFOS v22
+-->
+
+<decoder name="sophos-std">
+  <prematch type="pcre2">^device_name="[^"]*" timestamp="</prematch>
+</decoder>
+
+<!-- ===== Common header fields ===== -->
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bdevice_name="([^"]*)"</regex>
+  <order>sophos.device_name</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\blog_id="([^"]*)"</regex>
+  <order>sophos.log_id</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\blog_type="([^"]*)"</regex>
+  <order>sophos.log_type</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\blog_component="([^"]*)"</regex>
+  <order>sophos.log_component</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\blog_subtype="([^"]*)"</regex>
+  <order>sophos.log_subtype</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bseverity="([^"]*)"</regex>
+  <order>sophos.severity</order>
+</decoder>
+
+<!-- ===== Security fields (Firewall, IPS, Admin, Auth, Web) ===== -->
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bstatus="?([^"\s]*)"?</regex>
+  <order>status</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\buser_name="([^"]*)"</regex>
+  <order>srcuser</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bsrc_ip="?([^"\s]+)"?</regex>
+  <order>srcip</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bdst_ip="?([^"\s]+)"?</regex>
+  <order>dstip</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bsrc_port="?(\d+)"?</regex>
+  <order>srcport</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bdst_port="?(\d+)"?</regex>
+  <order>dstport</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bprotocol="?([^"\s]+)"?</regex>
+  <order>protocol</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bfw_rule_id="?(\d+)"?</regex>
+  <order>sophos.fw_rule_id</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bmessage="([^"]*)"</regex>
+  <order>sophos.message</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\burl="([^"]*)"</regex>
+  <order>url</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bsignature_id="?(\d+)"?</regex>
+  <order>sophos.signature_id</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bsignature_msg="([^"]*)"</regex>
+  <order>sophos.signature_msg</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\bsrc_country="([^"]*)"</regex>
+  <order>sophos.src_country</order>
+</decoder>
+
+<decoder name="sophos-std-fields">
+  <parent>sophos-std</parent>
+  <regex type="pcre2">\blog_occurrence="?(\d+)"?</regex>
+  <order>sophos.log_occurrence</order>
+</decoder>
