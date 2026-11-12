@@ -2,7 +2,7 @@
 
 Wazuh decoders and rules for **Sophos Firewall's current "Standard syslog protocol" log format** (formerly Central Reporting Format), plus a **Wazuh Active Response that blocks attackers on Sophos automatically** through its XML API.
 
-![Pipeline](docs/images/pipeline.png)
+![Pipeline](pipeline.png)
 
 ## Why
 
@@ -93,7 +93,7 @@ sudo chmod 640 /var/ossec/etc/sophos_api.conf
 
 Add the `<command>` and `<active-response>` blocks from the snippet, then restart the manager.
 
-![Active Response log](docs/images/active-response-log.png)
+![Active Response log](active-response-log.png)
 
 ## Safety
 
