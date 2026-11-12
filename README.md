@@ -106,7 +106,7 @@ Add the `<command>` and `<active-response>` blocks from the snippet, then restar
 
 ## Write-up
 
-Full walkthrough on Medium: *Building a Self-Defending Firewall: Sophos + Wazuh* — MEDIUM_LINK
+Full walkthrough on Medium: *Building a Self-Defending Firewall: Sophos + Wazuh* — [MEDIUM_LINK](https://medium.com/@muhammadahmadabid019/building-a-self-defending-firewall-sophos-wazuh-e8c5800b9468)
 
 ## Author
 
